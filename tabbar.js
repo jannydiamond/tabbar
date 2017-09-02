@@ -1,5 +1,8 @@
 let state = {}
 
+/**
+  * TODO
+  */
 const setState = nextState => {
   const newState = Object.assign({}, state, nextState);
 
@@ -8,6 +11,9 @@ const setState = nextState => {
   return newState;
 }
 
+/**
+  * TODO
+  */
 const initialState = {
   shift: 0,
   currItemIndex: 0
@@ -100,16 +106,25 @@ const moveLeft = (tabs, tabList) => {
 
   if (isFirstItem) {
     const reverseTabs = tabs.slice().reverse();
-    const tabListWidth = reverseTabs.reduce((acc, tab, i) => {
-      const isLargerThanWrapper = acc > wrapper.clientWidth - 96;
-      if (isLargerThanWrapper) return acc
+    const tabListWidth = reverseTabs.reduce((acc, tab, i, list) => {
+      if (acc.done && i === list.length - 1) return acc.sum;
+
+      if (acc.done) return acc;
+
+      const nextTab = list[i + 1];
+      const sumWithNext = acc.sum + tab.clientWidth + nextTab.clientWidth
+
+      const isLargerThanWrapper = sumWithNext >= wrapper.clientWidth - 96;
+      const sum = acc.sum + tab.clientWidth
+      if (isLargerThanWrapper) return { sum, done: true };
 
       setState({ currItemIndex: i + 1 });
 
-      return acc + tab.clientWidth
-    }, 0);
 
-    const newShift = tabListWidth;
+      return { sum, done: false };
+    }, { sum: 0, done: false });
+
+    const newShift = tabList.clientWidth - tabListWidth;
 
     setState({ shift: newShift })
 
@@ -134,6 +149,10 @@ const moveLeft = (tabs, tabList) => {
   tabList.style.transform = `translateX(${newShift}px)`;
 }
 
+
+/**
+  * TODO
+  */
 const addButtonEventListeners = (tabs, tabList) => {
   const tabPrevBtn = document.querySelector('.tabbar__prev');
   const tabNextBtn = document.querySelector('.tabbar__next');
@@ -143,6 +162,7 @@ const addButtonEventListeners = (tabs, tabList) => {
 }
 
 // IIFE called when script is loaded
+// Immediately invoked function expression
 (initModule = () => {
   const tabList = document.querySelector('.list--tabbar');
   const tabListItems = [...tabList.children];
