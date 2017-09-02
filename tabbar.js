@@ -49,6 +49,8 @@ const checkSlideControls = (tabListItems, wrapper, tabList) => {
 }
 
 const moveRight = (tabs, wrapper, tabList) => {
+  console.log({currentListItem, length: tabs.length})
+
   if(currentListItem < tabs.length - 1) {
     shiftLeft += tabs[currentListItem].clientWidth;
     shiftRight -= tabs[currentListItem].clientWidth;
