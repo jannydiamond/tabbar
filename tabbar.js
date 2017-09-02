@@ -116,9 +116,10 @@ const moveLeft = (tabs, tabList) => {
 
       const isLargerThanWrapper = sumWithNext >= wrapper.clientWidth - 96;
       const sum = acc.sum + tab.clientWidth
+
       if (isLargerThanWrapper) return { sum, done: true };
 
-      setState({ currItemIndex: i + 1 });
+      setState({ currItemIndex: i - 1 });
 
 
       return { sum, done: false };
@@ -135,6 +136,7 @@ const moveLeft = (tabs, tabList) => {
 
   const prevListItem = tabs[currItemIndex - 1];
   const shiftIsPositive = shift > 0;
+
   const newShift = shiftIsPositive
     ? -(shift - prevListItem.clientWidth)
     : shift + prevListItem.clientWidth;
