@@ -1,0 +1,135 @@
+* {
+    box-sizing: border-box;
+}
+
+.tabbar-container {
+    display: inline-block;
+    width: 100%;
+    border-bottom: 1px solid #dadada;
+    overflow: hidden;
+    position: relative;
+    height: 48px;
+}
+
+.tabbar-container.show-controls .list--tabbar {
+    display: block;
+    position: absolute;
+    margin: 0 48px;
+}
+
+.tabbar-container.show-controls .tabbar__prev {
+    display: block;
+}
+
+.tabbar-container.show-controls .tabbar__next {
+    display: block;
+}
+
+.btn {
+    background: blue;
+    border: 0;
+    color: white;
+}
+
+.btn--tabbar {
+    width: 48px;
+    height: 48px;
+    float: left;
+    position: absolute;
+    z-index: 2;
+}
+
+.tabbar__prev,
+.tabbar__next {
+    display: none;
+}
+
+.tabbar__prev {
+    left: 0;
+}
+
+.tabbar__prev::after {
+    content: '';
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 0 12px 4px rgba(0,0,255,0.3);
+    position: absolute;
+    top:0;
+    right: 0;
+}
+
+.tabbar__next {
+    right: 0;
+}
+
+.tabbar__next::before {
+    content: '';
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    box-shadow: 0 0 12px 4px rgba(0,0,255,0.3);
+    position: absolute;
+    top:0;
+    left: 0;
+}
+
+
+.list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.list--tabbar {
+    display: flex;
+    justify-content: center;
+    float: left;
+    height: 48px;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease;
+}
+
+.tabbar-container:not(.show-controls) .list--tabbar {
+    width: 100% !important;
+}
+
+.list__item {
+    line-height: 45px;
+    float: left;
+    padding: 0 16px;
+    border-bottom: 3px solid transparent;
+    position: relative;
+}
+
+.list__item::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    bottom: -3px;
+    transform: scale(0,1);
+    transition: transform 0.2s ease;
+}
+
+.list__item:hover {
+    cursor: pointer;
+    //border-bottom-color: gray;
+}
+
+.list__item:hover::after {
+    transform: scale(1,1);
+    background: gray;
+}
+
+.list__item.active {
+    border-bottom-color: red;
+}
+
+.list__item.active:hover::after {
+    background: red;
+}
