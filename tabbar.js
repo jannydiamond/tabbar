@@ -1,6 +1,3 @@
-const tabListContainer = document.querySelector('.tabbar-container');
-const tabList = document.querySelector('.list--tabbar');
-let tabListContainerWidth = tabListContainer.clientWidth;
 let shiftLeft = 0;
 let shiftRight = 0;
 let currentListItem = 0;
@@ -36,91 +33,97 @@ const setActiveTab = (currTab, tabs) => {
   currTab.classList.add('active');
 }
 
-const checkSlideControls = (tabListItemsWidth) => {
-  const itemsFillContainer = tabListContainerWidth > tabListItemsWidth
+const checkSlideControls = (tabListItems, wrapper, tabList) => {
+  const tabListItemsWidth = getTabListWidth(tabListItems, 96);
+  const itemsFillContainer = wrapper.clientWidth <= tabListItemsWidth
 
   if(itemsFillContainer) {
-    tabListContainer.classList.remove('show-controls');
+    wrapper.classList.add('show-controls');
+  } else {
+    wrapper.classList.remove('show-controls');
     shiftLeft = 0;
     shiftRight = 0;
     currentListItem = 0;
     tabList.style.transform = "translateX(0)";
-  } else {
-    tabListContainer.classList.add('show-controls');
   }
 }
 
-const addButtonEventListeners = (tabs) => {
-  const tabPrevBtn = document.querySelector('.tabbar__prev');
-  const tabNextBtn = document.querySelector('.tabbar__next');
+const moveRight = (tabs, wrapper, tabList) => {
+  if(currentListItem < tabs.length - 1) {
+    shiftLeft += tabs[currentListItem].clientWidth;
+    shiftRight -= tabs[currentListItem].clientWidth;
+    tabList.style.transform = "translateX(" + -shiftLeft + "px)";
+    currentListItem++;
 
-  tabNextBtn.addEventListener('click', () => {
-    if(currentListItem < tabs.length - 1) {
-      shiftLeft += tabs[currentListItem].clientWidth;
-      shiftRight -= tabs[currentListItem].clientWidth;
-      tabList.style.transform = "translateX(" + -shiftLeft + "px)";
-      currentListItem++;
-
-      if(shiftLeft + tabs[currentListItem].clientWidth > tabListContainerWidth - 96) {
-        shiftLeft = 0;
-        shiftRight = 0;
-        currentListItem = 0;
-        tabList.style.transform = "translateX(0)";
-      }
-    } else {
+    if(shiftLeft + tabs[currentListItem].clientWidth > wrapper.clientWidth - 96) {
       shiftLeft = 0;
       shiftRight = 0;
       currentListItem = 0;
       tabList.style.transform = "translateX(0)";
     }
-  });
-
-  tabPrevBtn.addEventListener('click', () => {
-    if(currentListItem === 0) {
-      let widthSum = tabs[currentListItem].clientWidth;
-
-      while(widthSum < tabListContainerWidth - 96) {
-        widthSum += tabs[currentListItem + 1].clientWidth;
-        currentListItem++;
-      }
-
-      shiftRight -= widthSum - tabs[currentListItem].clientWidth;
-      shiftLeft += widthSum - tabs[currentListItem].clientWidth;
-
-      tabList.style.transform = `translateX(${shiftRight}px)`;
-    }
-
-    if(currentListItem > 0) {
-      shiftRight += tabs[currentListItem - 1].clientWidth;
-      shiftLeft -= tabs[currentListItem - 1].clientWidth;
-      tabList.style.transform = `translateX(${shiftRight}px)`;
-      currentListItem--;
-    } else {
-      shiftRight = -(tabList.clientWidth - tabs[currentListItem].clientWidth);
-      shiftLeft = tabList.clientWidth - tabs[currentListItem].clientWidth;
-      currentListItem = tabs.length - 1;
-      tabList.style.transform = `translateX(${shiftRight}px)`;
-    }
-  });
+  } else {
+    shiftLeft = 0;
+    shiftRight = 0;
+    currentListItem = 0;
+    tabList.style.transform = "translateX(0)";
+  }
 }
 
-// IIFE to add listeners when script is loaded
+const moveLeft = (tabs, wrapper, tabList) => {
+  if(currentListItem === 0) {
+    let widthSum = tabs[currentListItem].clientWidth;
+
+    while(widthSum < wrapper.clientWidth - 96) {
+      widthSum += tabs[currentListItem + 1].clientWidth;
+      currentListItem++;
+    }
+
+    shiftRight -= widthSum - tabs[currentListItem].clientWidth;
+    shiftLeft += widthSum - tabs[currentListItem].clientWidth;
+
+    tabList.style.transform = `translateX(${shiftRight}px)`;
+  }
+
+  if(currentListItem > 0) {
+    shiftRight += tabs[currentListItem - 1].clientWidth;
+    shiftLeft -= tabs[currentListItem - 1].clientWidth;
+    tabList.style.transform = `translateX(${shiftRight}px)`;
+    currentListItem--;
+  } else {
+    shiftRight = -(tabList.clientWidth - tabs[currentListItem].clientWidth);
+    shiftLeft = tabList.clientWidth - tabs[currentListItem].clientWidth;
+    currentListItem = tabs.length - 1;
+    tabList.style.transform = `translateX(${shiftRight}px)`;
+  }
+}
+
+const addButtonEventListeners = (tabs, wrapper, tabList) => {
+  const tabPrevBtn = document.querySelector('.tabbar__prev');
+  const tabNextBtn = document.querySelector('.tabbar__next');
+
+  tabNextBtn.addEventListener('click', () => moveRight(tabs, wrapper, tabList));
+  tabPrevBtn.addEventListener('click', () => moveLeft(tabs, wrapper, tabList));
+}
+
+// IIFE called when script is loaded
 (initModule = () => {
+  const tabListContainer = document.querySelector('.tabbar-container');
+  const tabList = document.querySelector('.list--tabbar');
   const tabListItems = [...tabList.children];
 
   const tabListItemsWidth = getTabListWidth(tabListItems, 96);
   tabList.style.width = `${tabListItemsWidth}px`;
-  checkSlideControls(tabListItemsWidth);
+
+  checkSlideControls(tabListItems, tabListContainer, tabList);
 
   // Add tab event listeners
   tabListItems.forEach((item) => {
     item.addEventListener('click', e => setActiveTab(e.target, tabListItems));
   });
 
-  addButtonEventListeners(tabListItems)
+  addButtonEventListeners(tabListItems, tabListContainer, tabList)
 
   window.addEventListener('resize', () => {
-    tabListContainerWidth = tabListContainer.clientWidth;
-    checkSlideControls();
+    checkSlideControls(tabListItems, tabListContainer, tabList);
   });
 })()
