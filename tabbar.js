@@ -1,7 +1,11 @@
 let state = {}
 
 const setState = nextState => {
-  return {...state, ...nextState};
+  const newState = Object.assign({}, state, nextState);
+
+  state = newState;
+
+  return newState;
 }
 
 const initialState = {
@@ -60,8 +64,14 @@ const moveRight = (tabs, wrapper, tabList) => {
   const { currentListItem, shiftLeft } = state;
 
   const isLastItem = currentListItem === tabs.length - 1
+  const newShiftLeft = shiftLeft + tabs[currentListItem].clientWidth;
+  const newShiftRight = shiftRight = tabs[currentListItem].clientWidth;
 
-  if (isLastItem) {
+  const newTabListWidth = tabList.clientWidth - newShiftLeft;
+
+  const isSmallerThanWrapper = newTabListWidth < wrapper.clientWidth - 96
+
+  if (isLastItem || isSmallerThanWrapper) {
     // Reset state
     setState(initialState)
     tabList.style.transform = "translateX(0)";
@@ -69,71 +79,94 @@ const moveRight = (tabs, wrapper, tabList) => {
     return
   }
 
-  const newShiftLeft = shiftLeft + tabs[currentListItem].clientWidth;
-  const newShiftRight = shiftRight = tabs[currentListItem].clientWidth;
-  const newCurrListItem = currentListItem + 1;
+  const nextListItem = currentListItem + 1;
 
   const newState = setState({
     shiftLeft: newShiftLeft,
     shiftRigth: newShiftRight,
-    currentListItem: newCurrListItem
+    currentListItem: nextListItem
   })
 
   tabList.style.transform = `translateX(${-newState.shiftLeft}px)`;
 
-  const lastItemOut = (newState.shiftLeft + tabs[currentListItem].clientWidth
-    > wrapper.clientWidth - 96)
-
-  if(lastItemOut) {
-    // Reset state
-    setState(initialState)
-    tabList.style.transform = "translateX(0)";
-  }
-
   return
 }
 
+const handleFirstItem = (tabs, wrapper, tabList) => {
+  const { shiftLeft, shiftRight, currentListItem } = state;
+
+  const widthSum = tabs.reduce((acc, tab, i) => {
+    const largerThanWrapper = acc >= wrapper.clientWidth - 96
+
+    if (largerThanWrapper) return acc
+
+    setState({
+      currentListItem: i
+    })
+
+    return acc + tab.clientWidth
+  }, 0)
+
+  // Because state has meanwhile been manipulated, we need to get the
+  // updated currentListItem from the state
+  const width = widthSum - tabs[state.currentListItem].clientWidth
+
+  const newShiftRight = shiftRight - width
+  const newShiftLeft = shiftLeft + width
+
+  const newState = setState({
+    shiftLeft: newShiftLeft,
+    shiftRight: newShiftRight
+  })
+
+  tabList.style.transform = `translateX(${newState.shiftRight}px)`;
+}
+
+const handleOtherItems = (tabs, tabList) => {
+  const { shiftLeft, shiftRight, currentListItem } = state;
+
+  const newShiftRight = shiftRight + tabs[currentListItem - 1].clientWidth;
+  const newShiftLeft = shiftLeft - tabs[currentListItem - 1].clientWidth;
+
+  const newState = setState({
+    shiftRight: newShiftRight,
+    shiftLeft: newShiftLeft,
+    currentListItem: currentListItem - 1
+  })
+
+  tabList.style.transform = `translateX(${newState.shiftRight}px)`;
+}
+
+const handleWeirdCase = (tabs, tabList) => {
+  const { shiftLeft, shiftRight, currentListItem } = state;
+
+  const newShiftRight = -(tabList.clientWidth - tabs[currentListItem].clientWidth);
+  const newShiftLeft = tabList.clientWidth - tabs[currentListItem].clientWidth;
+  const newCurrListItem = tabs.length - 1;
+
+  const newState = setState({
+    shiftRight: newShiftRight,
+    shiftLeft: newShiftLeft,
+    currentListItem: newCurrListItem
+  })
+
+  tabList.style.transform = `translateX(${newState.shiftRight}px)`;
+}
+
 const moveLeft = (tabs, wrapper, tabList) => {
+  const { shiftRight, shiftLeft, currentListItem } = state
+
   const isFirstItem = currentListItem === 0
 
   if(isFirstItem) {
-    const widthSum = tabs.reduce((sum, tab, i) => {
-      const largerThanWrapper = acc >= wrapper.clientWidth - 96
-
-      if (largerThanWrapper) return acc
-
-      setState({
-        currentListItem: i
-      })
-
-      return acc + tab.clientWidth
-    }, 0)
-
-    const { shiftRight, shiftLeft, currentListItem } = state
-
-    const width = widthSum - tabs[currentListItem].clientWidth
-    const newShiftRight = shiftRight - width
-    const newShiftLeft = shiftLeft + width
-
-    setState({
-      shiftLeft: newShiftLeft,
-      shiftRight: newShiftRight
-    })
-
-    tabList.style.transform = `translateX(${shiftRight}px)`;
+    handleFirstItem(tabs, wrapper, tabList)
   }
 
-  if(currentListItem > 0) {
-    shiftRight += tabs[currentListItem - 1].clientWidth;
-    shiftLeft -= tabs[currentListItem - 1].clientWidth;
-    tabList.style.transform = `translateX(${shiftRight}px)`;
-    currentListItem--;
-  } else {
-    shiftRight = -(tabList.clientWidth - tabs[currentListItem].clientWidth);
-    shiftLeft = tabList.clientWidth - tabs[currentListItem].clientWidth;
-    currentListItem = tabs.length - 1;
-    tabList.style.transform = `translateX(${shiftRight}px)`;
-  }
+  // if(state.currentListItem > 0) {
+    // handleOtherItems(tabs, tabList)
+  // } else {
+    // handleWeirdCase(tabs, tabList)
+  // }
 }
 
 const addButtonEventListeners = (tabs, wrapper, tabList) => {
