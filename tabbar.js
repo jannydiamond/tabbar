@@ -1,6 +1,14 @@
-let shiftLeft = 0;
-let shiftRight = 0;
-let currentListItem = 0;
+let state = {}
+
+const setState = nextState => {
+  return {...state, ...nextState};
+}
+
+const initialState = {
+  shiftLeft: 0,
+  shiftRight: 0,
+  currentListItem: 0
+}
 
 /**
  * Given a list of items accumulates the width of each respective item,
@@ -41,47 +49,76 @@ const checkSlideControls = (tabListItems, wrapper, tabList) => {
     wrapper.classList.add('show-controls');
   } else {
     wrapper.classList.remove('show-controls');
-    shiftLeft = 0;
-    shiftRight = 0;
-    currentListItem = 0;
     tabList.style.transform = "translateX(0)";
+
+    // Reset state
+    setState(initialState)
   }
 }
 
 const moveRight = (tabs, wrapper, tabList) => {
-  console.log({currentListItem, length: tabs.length})
+  const { currentListItem, shiftLeft } = state;
 
-  if(currentListItem < tabs.length - 1) {
-    shiftLeft += tabs[currentListItem].clientWidth;
-    shiftRight -= tabs[currentListItem].clientWidth;
-    tabList.style.transform = "translateX(" + -shiftLeft + "px)";
-    currentListItem++;
+  const isLastItem = currentListItem === tabs.length - 1
 
-    if(shiftLeft + tabs[currentListItem].clientWidth > wrapper.clientWidth - 96) {
-      shiftLeft = 0;
-      shiftRight = 0;
-      currentListItem = 0;
-      tabList.style.transform = "translateX(0)";
-    }
-  } else {
-    shiftLeft = 0;
-    shiftRight = 0;
-    currentListItem = 0;
+  if (isLastItem) {
+    // Reset state
+    setState(initialState)
+    tabList.style.transform = "translateX(0)";
+
+    return
+  }
+
+  const newShiftLeft = shiftLeft + tabs[currentListItem].clientWidth;
+  const newShiftRight = shiftRight = tabs[currentListItem].clientWidth;
+  const newCurrListItem = currentListItem + 1;
+
+  const newState = setState({
+    shiftLeft: newShiftLeft,
+    shiftRigth: newShiftRight,
+    currentListItem: newCurrListItem
+  })
+
+  tabList.style.transform = `translateX(${-newState.shiftLeft}px)`;
+
+  const lastItemOut = (newState.shiftLeft + tabs[currentListItem].clientWidth
+    > wrapper.clientWidth - 96)
+
+  if(lastItemOut) {
+    // Reset state
+    setState(initialState)
     tabList.style.transform = "translateX(0)";
   }
+
+  return
 }
 
 const moveLeft = (tabs, wrapper, tabList) => {
-  if(currentListItem === 0) {
-    let widthSum = tabs[currentListItem].clientWidth;
+  const isFirstItem = currentListItem === 0
 
-    while(widthSum < wrapper.clientWidth - 96) {
-      widthSum += tabs[currentListItem + 1].clientWidth;
-      currentListItem++;
-    }
+  if(isFirstItem) {
+    const widthSum = tabs.reduce((sum, tab, i) => {
+      const largerThanWrapper = acc >= wrapper.clientWidth - 96
 
-    shiftRight -= widthSum - tabs[currentListItem].clientWidth;
-    shiftLeft += widthSum - tabs[currentListItem].clientWidth;
+      if (largerThanWrapper) return acc
+
+      setState({
+        currentListItem: i
+      })
+
+      return acc + tab.clientWidth
+    }, 0)
+
+    const { shiftRight, shiftLeft, currentListItem } = state
+
+    const width = widthSum - tabs[currentListItem].clientWidth
+    const newShiftRight = shiftRight - width
+    const newShiftLeft = shiftLeft + width
+
+    setState({
+      shiftLeft: newShiftLeft,
+      shiftRight: newShiftRight
+    })
 
     tabList.style.transform = `translateX(${shiftRight}px)`;
   }
@@ -115,6 +152,9 @@ const addButtonEventListeners = (tabs, wrapper, tabList) => {
 
   const tabListItemsWidth = getTabListWidth(tabListItems, 96);
   tabList.style.width = `${tabListItemsWidth}px`;
+
+  // Set initial state
+  setState(initialState)
 
   checkSlideControls(tabListItems, tabListContainer, tabList);
 
