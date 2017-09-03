@@ -1,8 +1,10 @@
 let state = {}
 
 /**
-  * TODO
-  */
+* Sets the new state
+* @param {object} nextState - Object for the new state
+* @return {object} returns the new state
+*/
 const setState = nextState => {
   const newState = Object.assign({}, state, nextState);
 
@@ -12,7 +14,7 @@ const setState = nextState => {
 }
 
 /**
-  * TODO
+  * Sets the initial state object
   */
 const initialState = {
   shift: 0,
@@ -35,16 +37,13 @@ const setActiveTab = (currTab, tabs) => {
 }
 
 /**
-  * TODO
-  */
-const checkSlideControls = (tabs, tabList) => {
+ * Checks if the slide controls are visible or not
+ * @param {array} tabs - Array of tab nodes
+ * @param {object} tabList - The tab list node with all the tabs
+ * @return {undefined}
+ */
+const checkSlideControls = (tabs, tabList, tabListItemsWidth) => {
   const wrapper = document.querySelector('.tabbar-container');
-
-  const tabListItemsWidth = tabs.reduce((acc, tab) => {
-    return acc + tab.clientWidth;
-  }, 0);
-
-  tabList.style.width = `${tabListItemsWidth}px`;
 
   const itemsFillContainer = wrapper.clientWidth < tabListItemsWidth
 
@@ -60,14 +59,18 @@ const checkSlideControls = (tabs, tabList) => {
 }
 
 /**
-  * TODO
-  */
+ * Handles right button click to move tab list
+ * @param {array} tabs - Array of tab nodes
+ * @param {object} tabList - The tab list node with all the tabs
+ * @return {undefined}
+ */
 const moveRight = (tabs, tabList) => {
   const { currItemIndex, shift } = state;
   const wrapper = document.querySelector('.tabbar-container');
 
-  const isLastItem = currItemIndex === tabs.length - 1
-  const shiftIsNegative = shift < 0
+  const isLastItem = currItemIndex === tabs.length - 1;
+
+  const shiftIsNegative = shift < 0;
   const newShift = shiftIsNegative
     ? -(shift - tabs[currItemIndex].clientWidth)
     : shift + tabs[currItemIndex].clientWidth;
@@ -96,8 +99,11 @@ const moveRight = (tabs, tabList) => {
 }
 
 /**
-  * TODO
-  */
+ * Handles right button click to move tab list
+ * @param {array} tabs - Array of tab nodes
+ * @param {object} tabList - The tab list node with all the tabs
+ * @return {undefined}
+ */
 const moveLeft = (tabs, tabList) => {
   const { shift, currItemIndex } = state;
   const wrapper = document.querySelector('.tabbar-container');
@@ -107,7 +113,8 @@ const moveLeft = (tabs, tabList) => {
   if (isFirstItem) {
     const reverseTabs = tabs.slice().reverse();
     const tabListWidth = reverseTabs.reduce((acc, tab, i, list) => {
-      if (acc.done && i === list.length - 1) return acc.sum;
+
+      if (i === list.length - 1) return acc.sum;
 
       if (acc.done) return acc;
 
@@ -119,7 +126,7 @@ const moveLeft = (tabs, tabList) => {
 
       if (isLargerThanWrapper) return { sum, done: true };
 
-      setState({ currItemIndex: i - 1 });
+      setState({ currItemIndex: (tabs.length - 1) - (i + 1) });
 
 
       return { sum, done: false };
@@ -169,10 +176,16 @@ const addButtonEventListeners = (tabs, tabList) => {
   const tabList = document.querySelector('.list--tabbar');
   const tabListItems = [...tabList.children];
 
+  const tabListItemsWidth = tabListItems.reduce((acc, tab) => {
+    return acc + tab.clientWidth;
+  }, 0);
+
+  tabList.style.width = `${tabListItemsWidth}px`;
+
   // Set initial state
   setState(initialState)
 
-  checkSlideControls(tabListItems, tabList);
+  checkSlideControls(tabListItems, tabList, tabListItemsWidth);
 
   // Add tab event listeners
   tabListItems.forEach((item) => {
@@ -182,6 +195,6 @@ const addButtonEventListeners = (tabs, tabList) => {
   addButtonEventListeners(tabListItems, tabList)
 
   window.addEventListener('resize', () => {
-    checkSlideControls(tabListItems,  tabList);
+    checkSlideControls(tabListItems,  tabList, tabListItemsWidth);
   });
 })()
